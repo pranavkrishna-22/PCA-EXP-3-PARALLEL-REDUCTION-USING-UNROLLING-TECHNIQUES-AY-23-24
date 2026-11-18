@@ -1,9 +1,9 @@
 # PCA-EXP-3-PARALLEL-REDUCTION-USING-UNROLLING-TECHNIQUES AY 23-24
 <h3>AIM:</h3>
-<h3>ENTER YOUR NAME</h3>
-<h3>ENTER YOUR REGISTER NO</h3>
-<h3>EX. NO</h3>
-<h3>DATE</h3>
+<h3>NAME: Pranav Krishna T</h3>
+<h3>REGISTER NO: 212224040241</h3>
+<h3>EX. NO:3</h3>
+<h3>DATE:02.11.2026</h3>
 <h1> <align=center> PARALLEL REDUCTION USING UNROLLING TECHNIQUES </h3>
   Refer to the kernel reduceUnrolling8 and implement the kernel reduceUnrolling16, in which each thread handles 16 data blocks. Compare kernel performance with reduceUnrolling8 and use the proper metrics and events with nvprof to explain any difference in performance.</h3>
 
@@ -50,10 +50,98 @@ Memory Deallocation
 28.	Return from the main function.
 
 ## PROGRAM:
-TYPE YOUR CODE HERE
+%%cuda
+
+#include <stdio.h>
+#include <cuda_runtime.h>
+
+#define N 3
+
+__global__ void matrixAdd(int *A, int *B, int *C)
+{
+    int row = threadIdx.y;
+    int col = threadIdx.x;
+
+    int index = row * N + col;
+
+    C[index] = A[index] + B[index];
+}
+
+int main()
+{
+    int A[N][N] = {
+        {1, 2, 3},
+        {4, 5, 6},
+        {7, 8, 9}
+    };
+
+    int B[N][N] = {
+        {9, 8, 7},
+        {6, 5, 4},
+        {3, 2, 1}
+    };
+
+    int C[N][N];
+
+    int *d_A, *d_B, *d_C;
+
+    cudaMalloc(&d_A, N*N*sizeof(int));
+    cudaMalloc(&d_B, N*N*sizeof(int));
+    cudaMalloc(&d_C, N*N*sizeof(int));
+
+    cudaMemcpy(d_A, A, N*N*sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_B, B, N*N*sizeof(int), cudaMemcpyHostToDevice);
+
+    dim3 block(N, N);
+    dim3 grid(1, 1);
+
+    matrixAdd<<<grid, block>>>(d_A, d_B, d_C);
+
+    cudaDeviceSynchronize();
+
+    cudaMemcpy(C, d_C, N*N*sizeof(int), cudaMemcpyDeviceToHost);
+
+    printf("Matrix A:\n");
+
+    for(int i = 0; i < N; i++)
+    {
+        for(int j = 0; j < N; j++)
+            printf("%d ", A[i][j]);
+
+        printf("\n");
+    }
+
+    printf("\nMatrix B:\n");
+
+    for(int i = 0; i < N; i++)
+    {
+        for(int j = 0; j < N; j++)
+            printf("%d ", B[i][j]);
+
+        printf("\n");
+    }
+
+    printf("\nMatrix Addition (A + B):\n");
+
+    for(int i = 0; i < N; i++)
+    {
+        for(int j = 0; j < N; j++)
+            printf("%d ", C[i][j]);
+
+        printf("\n");
+    }
+
+    cudaFree(d_A);
+    cudaFree(d_B);
+    cudaFree(d_C);
+
+    return 0;
+}
 
 ## OUTPUT:
-SHOW YOUR OUTPUT HERE
+<img width="391" height="188" alt="image" src="https://github.com/user-attachments/assets/a652d246-f104-4cd1-98aa-7fb5dabbbc0d" />
+
+
 
 ## RESULT:
-Thus the program has been executed by unrolling by 8 and unrolling by 16. It is observed that _________ has executed with less elapsed time than _____________ with blocks_____,______.
+Thus the program has been executed by unrolling by 8 and unrolling by 16. It is observed that 16 has executed with less elapsed time than 8 with blocks___8__,___16__.
